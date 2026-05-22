@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: security-audit-service
+  namespace: hse-llm-project
+  labels:
+    app: security-audit-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: security-audit-service
+  template:
+    metadata:
+      labels:
+        app: security-audit-service
+    spec:
+      containers:
+        - name: security-audit-service
+          image: awesomecosmonaut/security-audit-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+          env:
+            - name: POSTGRES_HOST
+              value: postgresql.hse-llm-project.svc.cluster.local
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_DB
+              value: default
+            - name: POSTGRES_USER
+              value: admin
+            - name: POSTGRES_PASSWORD
+              value: admin
+            - name: JWT_SECRET
+              value: change-me
+            - name: JWT_EXPIRATION_MINUTES
+              value: "30"
+            - name: CORS_ORIGINS
+              value: "*"
+            - name: ADMIN_EMAIL
+              value: admin@platform.local
+            - name: ADMIN_PASSWORD
+              value: admin
+            - name: ADMIN_TEAM
+              value: platform-admin
+            - name: DEFAULT_USER_TEAM
+              value: default
+            - name: PROJECT_KEY
+              value: default
+            - name: DEMO_USERS_ENABLED
+              value: "true"
+            - name: DEMO_USERS_PASSWORD
+              value: demo123
+            - name: DEMO_SERVICE_ACCOUNT_API_KEY
+              value: demo-ci-bot-api-key-platform-v2
+            - name: LOG_LEVEL
+              value: INFO
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

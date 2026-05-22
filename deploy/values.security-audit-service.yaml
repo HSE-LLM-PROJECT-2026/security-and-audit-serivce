@@ -1,0 +1,73 @@
+namespace:
+  create: false
+  name: hse-llm-project
+
+nameOverride: "security-audit-service"
+fullnameOverride: "security-audit-service"
+
+# security-audit-service intentionally runs as a single instance.
+
+serviceAccount:
+  create: false
+  name: ""
+
+image:
+  repository: awesomecosmonaut/security-audit-service
+  tag: latest
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+  nodePort: null
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+probes:
+  liveness:
+    path: /livez
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    timeoutSeconds: 2
+    failureThreshold: 3
+  readiness:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+env:
+  logLevel: INFO
+  jwtSecret: change-me
+  jwtAlgorithm: HS256
+  jwtExpirationMinutes: "30"
+  refreshTokenExpirationHours: "168"
+  adminEmail: admin@platform.local
+  adminPassword: admin
+  adminName: Platform Administrator
+  adminTeam: platform-admin
+  defaultUserTeam: default
+  projectKey: default
+  demoUsersEnabled: "true"
+  demoUsersPassword: demo123
+  demoServiceAccountApiKey: demo-ci-bot-api-key-platform-v2
+  shortReadCacheTtlSeconds: "10"
+  shortReadCacheMaxEntries: "512"
+  corsOrigins: "*"
+
+postgres:
+  host: postgresql.hse-llm-project.svc.cluster.local
+  port: 5432
+  db: default
+  user: admin
+  password: admin
+  existingSecretName: ""
+  existingSecretKey: ""

@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "security-audit-service.fullname" . }}
+  labels:
+    {{- include "security-audit-service.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "security-audit-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "security-audit-service.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "security-audit-service.serviceAccountName" . }}
+      containers:
+        - name: security-audit-service
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: POSTGRES_HOST
+              value: {{ .Values.postgres.host | quote }}
+            - name: POSTGRES_PORT
+              value: {{ .Values.postgres.port | quote }}
+            - name: POSTGRES_DB
+              value: {{ .Values.postgres.db | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.postgres.user | quote }}
+            - name: POSTGRES_PASSWORD
+              {{- if .Values.postgres.existingSecretName }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.existingSecretName | quote }}
+                  key: {{ .Values.postgres.existingSecretKey | quote }}
+              {{- else }}
+              value: {{ .Values.postgres.password | quote }}
+              {{- end }}
+            - name: LOG_LEVEL
+              value: {{ .Values.env.logLevel | quote }}
+            - name: JWT_SECRET
+              value: {{ .Values.env.jwtSecret | quote }}
+            - name: JWT_ALGORITHM
+              value: {{ .Values.env.jwtAlgorithm | quote }}
+            - name: JWT_EXPIRATION_MINUTES
+              value: {{ .Values.env.jwtExpirationMinutes | quote }}
+            - name: REFRESH_TOKEN_EXPIRATION_HOURS
+              value: {{ .Values.env.refreshTokenExpirationHours | quote }}
+            - name: ADMIN_EMAIL
+              value: {{ .Values.env.adminEmail | quote }}
+            - name: ADMIN_PASSWORD
+              value: {{ .Values.env.adminPassword | quote }}
+            - name: ADMIN_NAME
+              value: {{ .Values.env.adminName | quote }}
+            - name: ADMIN_TEAM
+              value: {{ .Values.env.adminTeam | quote }}
+            - name: DEFAULT_USER_TEAM
+              value: {{ .Values.env.defaultUserTeam | quote }}
+            - name: PROJECT_KEY
+              value: {{ .Values.env.projectKey | quote }}
+            - name: DEMO_USERS_ENABLED
+              value: {{ .Values.env.demoUsersEnabled | quote }}
+            - name: DEMO_USERS_PASSWORD
+              value: {{ .Values.env.demoUsersPassword | quote }}
+            - name: DEMO_SERVICE_ACCOUNT_API_KEY
+              value: {{ .Values.env.demoServiceAccountApiKey | quote }}
+            - name: SHORT_READ_CACHE_TTL_SECONDS
+              value: {{ .Values.env.shortReadCacheTtlSeconds | quote }}
+            - name: SHORT_READ_CACHE_MAX_ENTRIES
+              value: {{ .Values.env.shortReadCacheMaxEntries | quote }}
+            - name: CORS_ORIGINS
+              value: {{ .Values.env.corsOrigins | quote }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
