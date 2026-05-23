@@ -74,17 +74,37 @@ LOG_LEVEL=INFO
 ```
 
 ## Основные API-ручки
-- `GET /health`
-- `GET /livez`
-- `POST /auth/register`
-- `POST /auth/login`
-- `POST /auth/refresh`
-- `POST /auth/verify`
-- `GET /users`
-- `GET /teams`
-- `GET /roles`
-- `POST /audit`
-- `GET /audit`
+
+| Метод | Ручка | Кто использует | Назначение |
+|--------|-------|----------------|------------|
+| `POST` | `/auth/register` | Frontend | Создает пользователя и возвращает его профиль. |
+| `POST` | `/auth/login` | Frontend | Проверяет логин и пароль, выпускает access и refresh token. |
+| `POST` | `/auth/refresh` | Frontend | Обновляет access token по refresh token. |
+| `POST` | `/auth/verify` | Все backend-сервисы | Проверяет bearer token или service token и возвращает principal. |
+| `GET` | `/users` | Frontend | Возвращает список пользователей платформы. |
+| `GET` | `/users/{user_id}` | Frontend | Возвращает профиль конкретного пользователя. |
+| `PATCH` | `/users/{user_id}/role` | Frontend | Меняет платформенную роль пользователя. |
+| `PATCH` | `/users/{user_id}/team` | Frontend | Обновляет основную команду пользователя. |
+| `DELETE` | `/users/{user_id}` | Frontend | Удаляет пользователя. |
+| `POST` | `/users/service-account` | Frontend, CI/CD | Создает техническую учетную запись для программного доступа. |
+| `GET` | `/teams` | Frontend | Возвращает список команд. |
+| `POST` | `/teams` | Frontend | Создает команду и базовые роли внутри нее. |
+| `GET` | `/teams/{team_name}/roles` | Frontend | Возвращает роли конкретной команды. |
+| `PUT` | `/teams/{team_name}/roles/{role_name}` | Frontend | Создает или обновляет роль команды и набор permissions. |
+| `DELETE` | `/teams/{team_name}/roles/{role_name}` | Frontend | Удаляет роль команды. |
+| `GET` | `/users/{user_id}/team-roles` | Frontend | Возвращает членство пользователя в командах и роли внутри них. |
+| `PUT` | `/users/{user_id}/team-roles` | Frontend | Назначает пользователю роли в командах. |
+| `GET` | `/project/roles` | Frontend | Возвращает платформенные роли. |
+| `PUT` | `/project/roles/{role_name}` | Frontend | Создает или обновляет платформенную роль. |
+| `DELETE` | `/project/roles/{role_name}` | Frontend | Удаляет платформенную роль. |
+| `GET` | `/users/{user_id}/project-roles` | Frontend | Возвращает платформенные роли пользователя. |
+| `PUT` | `/users/{user_id}/project-roles` | Frontend | Назначает пользователю платформенные роли. |
+| `GET` | `/users/{user_id}/allowed-models` | Frontend, inference gateway | Возвращает whitelist моделей пользователя. |
+| `PUT` | `/users/{user_id}/allowed-models` | Frontend | Обновляет whitelist моделей пользователя. |
+| `POST` | `/audit/events` | Все backend-сервисы | Записывает audit event по управленческому или inference-действию. |
+| `GET` | `/audit` | Frontend | Возвращает журнал аудита с фильтрами по пользователю, действию и времени. |
+| `GET` | `/health` | Ingress, мониторинг | Проверяет доступность security/audit service. |
+| `GET` | `/livez` | Kubernetes | Liveness probe контейнера. |
 
 ## Сборка и запуск в Docker
 
