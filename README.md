@@ -1,7 +1,5 @@
 # Security and Audit Service
 
-[HSE-LLM-PROJECT-2026/security-and-audit-serivce](https://github.com/HSE-LLM-PROJECT-2026/security-and-audit-serivce)
-
 ## Описание
 
 FastAPI-сервис для аутентификации, RBAC, управления пользователями, командами, ролями и audit log. Название папки `security-and-audit-serivce` оставлено как есть, потому что так репозиторий уже используется в инфраструктуре.
