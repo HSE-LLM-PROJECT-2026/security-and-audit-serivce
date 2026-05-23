@@ -2,86 +2,107 @@
 
 ## Описание
 
-FastAPI-сервис для аутентификации, RBAC, управления пользователями, командами, ролями и audit log. Название папки `security-and-audit-serivce` оставлено как есть, потому что так репозиторий уже используется в инфраструктуре.
+Этот репозиторий содержит сервис аутентификации, RBAC и аудита. Он выпускает JWT, хранит пользователей, команды, роли, технические токены и audit log для действий платформы.
 
 ## Основные возможности
-
 - регистрация и логин пользователей
 - выпуск access/refresh JWT
 - проверка bearer token для других сервисов
 - управление пользователями, командами и ролями
 - whitelist моделей для пользователей
-- service accounts и API-key доступ
 - запись и просмотр audit events
-- demo seed пользователей для стенда
+
+## Структура проекта
+
+- `app/` — основной код приложения
+  - `main.py` — FastAPI-приложение и HTTP-ручки
+  - `config.py` — настройки сервиса
+  - `auth.py` — JWT, пароли и service tokens
+  - `database.py` — работа с PostgreSQL
+  - `models.py` — Pydantic-схемы
+  - `rbac.py` — роли и наборы прав
+
+- `deploy/` — файлы и переменные для развертывания
+- `.env.example` — пример переменных окружения
+- `Dockerfile` — сборка Docker-образа
+- `pyproject.toml` — зависимости и настройки Python-проекта
+- `requirements.txt` — список зависимостей для совместимого запуска без uv
+
+## Быстрый старт локально
+
+1. Установите зависимости:
+   ```bash
+   uv sync
+   ```
+
+2. Создайте `.env` на основе `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Запустите сервис:
+   ```bash
+   uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+   ```
+
+Если `uv` не используется, можно запустить через обычный virtualenv:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+## Переменные окружения
+- `DATABASE_URL`
+- `JWT_SECRET`
+- `JWT_ACCESS_TTL_MINUTES`
+- `JWT_REFRESH_TTL_DAYS`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `ADMIN_NAME`
+- `DEMO_USERS_ENABLED`
+- `LOG_LEVEL`
+
+Пример `.env`:
+
+```env
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/llm_platform
+SERVICE_TOKEN=change-me
+LOG_LEVEL=INFO
+```
 
 ## Основные API-ручки
-
+- `GET /health`
+- `GET /livez`
 - `POST /auth/register`
 - `POST /auth/login`
 - `POST /auth/refresh`
 - `POST /auth/verify`
 - `GET /users`
 - `GET /teams`
-- `GET /project/roles`
+- `GET /roles`
+- `POST /audit`
 - `GET /audit`
-- `POST /audit/events`
-- `GET /health`, `GET /livez`
 
-## Структура проекта
-
-- `app/main.py` — FastAPI API
-- `app/database.py` — работа с PostgreSQL
-- `app/auth.py` — пароли, JWT, API keys
-- `app/rbac.py` — роли и permissions
-- `app/models.py` — Pydantic-схемы
-- `tests/` — тесты auth/RBAC/demo seed
-- `deploy/` — скрипты деплоя
-- `k8s/` — базовые Kubernetes-манифесты
-
-## Быстрый старт локально
+## Сборка и запуск в Docker
 
 ```bash
-uv sync --frozen --extra dev
-uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+docker build -t hse-llm-project-2026/security-and-audit-serivce:local .
+docker run --env-file .env -p 8000:8000 hse-llm-project-2026/security-and-audit-serivce:local
 ```
 
-Проверка тестов:
+## Деплой в Kubernetes
 
-```bash
-uv run pytest -q
-```
+Файлы развертывания лежат в папке `deploy/`. Для сервисов, которые уже подключены к стенду, используются Helm values и deploy-скрипты из соответствующего репозитория или общего инфраструктурного пайплайна.
 
-## Переменные окружения
+## Метрики и документация
 
-- `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` — PostgreSQL
-- `JWT_SECRET`, `JWT_ALGORITHM` — подпись токенов
-- `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME`, `ADMIN_TEAM` — seed admin
-- `DEMO_USERS_ENABLED`, `DEMO_USERS_PASSWORD` — demo-пользователи
-- `CORS_ORIGINS` — CORS
-
-Пример лежит в `.env.example`.
-
-## Docker
-
-```bash
-docker build -t awesomecosmonaut/security-audit-service:latest .
-docker run --env-file .env -p 8000:8000 awesomecosmonaut/security-audit-service:latest
-```
-
-## Деплой
-
-```bash
-cd deploy
-./deploy-from-scratch.sh
-```
-
-Полная пересборка и переустановка:
-
-```bash
-cd deploy
-./rebuild-delete-deploy.sh
-```
+- Swagger UI: `/docs`
+- OpenAPI: `/openapi.json`
+- Health check: `/health`
+- Liveness check: `/livez`
 
 ## Автор
 
